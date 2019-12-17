@@ -39,23 +39,35 @@ The following figure illustrates all the required functionalities of the Message
 
 ### Create the project structure
 
-Ballerina is a complete programming language that supports custom project structures. Use the following package structure for this guide.
+Let's create the following project structure for this guide.
 
 ```
 message-filtering
     ├── guide
-       └── message-filtering
-           ├── passed_student_filter_service.bal
-           └── tests
-               └── passed_student_filter_service_test.bal
+        ├── Ballerina.toml
+        ├── src
+            └── message_filtering
+                ├── passed_student_filter_service.bal
+                └── tests
+                    └── passed_student_filter_service_test.bal
+
+
 
 ```
 
-Create the above directories in your local machine and also create empty `.bal` files. Then open the command line and navigate to `message-filtering/guide` and run Ballerina project initializing toolkit.
+To create the basic project structure run the following command.
 
 ```bash
-   $ ballerina init
+    $ ballerina create guide
 ```
+
+Now, navigate to `guide` directory and run the following command to create the new module `message_filtering`.
+
+```bash
+    $ ballerina create message_filtering
+```
+
+Now, add the `passed_student_filter_service.bal` and `passed_student_filter_service_test.bal` files in place of `main.bal` and `main_test.bal` which get created as a part of the generic project template.
 
 ### Developing the Message Filtering web service
 
@@ -108,7 +120,7 @@ service filterService on filterServiceEP {
                     isQualified = false;
                 }
             }
-            req.setJsonPayload(untaint reqPayload);
+            req.setJsonPayload(<@untainted> reqPayload);
         } else {
             http:Response errResp = new;
             errResp.statusCode = 400;
@@ -118,7 +130,7 @@ service filterService on filterServiceEP {
             return;
         }
         // Define a variables for response payload and status code
-        json resp = {status:""};
+        map<json> resp = {status:""};
         int statusCode;
         // Check whether student is qualified or not
         if (isQualified) {
@@ -127,19 +139,19 @@ service filterService on filterServiceEP {
             if (response is http:Response) {
                 statusCode = response.statusCode;
                 // Set response status to Qualified
-                resp.status = "Qualified";
+                resp["status"] = "Qualified";
             } else {
                 log:printError("Invalid response", err = response);
             }
         } else {
             // Set response status to Not Qualified
-            resp.status = "Not Qualified";
+            resp["status"] = "Not Qualified";
         }
 
         // Set JSON response
         http:Response res = new;
         res.statusCode = 200;
-        res.setJsonPayload(untaint resp);
+        res.setJsonPayload(<@untainted> resp);
         var err = caller->respond(res);
         handleResponseError(err);
     }
@@ -162,7 +174,7 @@ You can implement the business logic of message filtering machanism in `filterMa
 You can run the `passed_student_filter_service` that you developed above in your local environment. Open your command line and navigate to `message-filtering/guide`, and execute the following command.
 
 ```
-$ ballerina run message-filtering
+$ ballerina run message_filtering
 ```
 
 You can test the functionality of the `passed_student_filter_service` by sending an HTTP request for the `filterMarks` operation. For example, we have used the cURL commands to test `filterMarks` operation of `passed_student_filter_service` as follows. 
@@ -212,22 +224,21 @@ Once you are done with the development, you can deploy the service using any of 
 
 ### Deploying locally
 
-As the first step, you can build a Ballerina executable archive (.balx) of the service that you developed above. Navigate to `message-filtering/guide` and run the following command. 
+As the first step, you can build a Java archive (.jar) of the service that you developed above. Navigate to `message-filtering/guide` and run the following command. 
 
 ```bash
-   $ ballerina build message-filtering
+   $ ballerina build message_filtering
 ```
 
-Once the `message-filtering.balx` file is created inside the target folder, you can run it with the following command. 
+Once the `message_filtering-executable.jar` file is created inside the target folder, you can run it with the following command. 
 
 ```bash
-   $ ballerina run target/message-filtering.balx
+   $ ballerina run target/bin/message_filtering-executable.jar
 ```
 
 On successful execution of the service, the following output appears on your command line. 
 
 ```
-   ballerina: initiating service(s) in 'target/message-filtering.balx'
    ballerina: started HTTP/WS endpoint 0.0.0.0:9090
 
 ```
@@ -263,10 +274,10 @@ service filterService on filterServiceEP {
 
 `@docker:Config` annotation is used to provide the basic Docker image configurations for the sample. `@docker:Expose {}` is used to expose the port. 
 
-Now you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. This will also create the corresponding Docker image using the Docker annotations that you have configured above. Navigate to `message-filtering/guide` and run the following command.  
+Now you can build a Java archive (.jar) of the service that we developed above, using the following command. This will also create the corresponding Docker image using the Docker annotations that you have configured above. Navigate to `message_filtering/guide` and run the following command.  
 
 ```
-   $ ballerina build message-filtering
+   $ ballerina build message_filtering
 ```
 
 Once you successfully build the Docker image, you can run it with the `docker run` command that is shown in the previous step.  
@@ -336,20 +347,20 @@ If you are using Minikube, you need to set a couple of additional attributes to 
 - `dockerCertPath`: The path to the certificates directory of Minikube (e.g., `/home/ballerina/.minikube/certs`).
 - `dockerHost`: The host for the running cluster (e.g., `tcp://192.168.99.100:2376`). The IP address of the cluster can be found by running the `minikube ip` command.
 
-Now you can build a Ballerina executable archive (.balx) of the service that you developed above using the following command. This also creates the corresponding Docker image and the Kubernetes artifacts using the Kubernetes annotations that you have configured above.
+Now you can build a Java archive (.jar) of the service that you developed above using the following command. This also creates the corresponding Docker image and the Kubernetes artifacts using the Kubernetes annotations that you have configured above.
   
 ```
-   $ ballerina build message-filtering
+   $ ballerina build message_filtering
 ```
 
 You can verify that the Docker image that you specified in `@kubernetes:Deployment` is created, by using `$ docker images`. 
 
-Also, the Kubernetes artifacts related your service are generated in `./target/message-filtering/kubernetes`. 
+Also, the Kubernetes artifacts related your service are generated in `./target/message_filtering/kubernetes`. 
 
 Now you can create the Kubernetes deployment using:
 
 ```bash
-   $ kubectl apply -f ./target/kubernetes/message-filtering
+   $ kubectl apply -f ./target/kubernetes/message_filtering
  
    deployment.extensions "ballerina-guides-passed_student_filter_service" created
    ingress.extensions "ballerina-guides-passed_student_filter_service" created
@@ -453,7 +464,7 @@ Follow the steps below to use tracing with Ballerina.
 - Navigate to `message-filtering/guide` and run the `passed_student_filter_service` using the following command.
 
 ```
-   $ ballerina run message-filtering/
+   $ ballerina run message_filtering/
 ```
 
 - Observe the tracing using Jaeger UI using following URL.
@@ -605,7 +616,7 @@ iii) Start the logstash container, replace the {SAMPLE_ROOT} with your directory
      
 ```
 $ docker run -v {SAMPLE_ROOT}/filbeat/filebeat.yml:/usr/share/filebeat/filebeat.yml \
--v {SAMPLE_ROOT}/guide/message-filtering/ballerina.log:/usr/share\
+-v {SAMPLE_ROOT}/guide/message_filtering/ballerina.log:/usr/share\
 /filebeat/ballerina.log --link logstash:logstash docker.elastic.co/beats/filebeat:6.5.1
 ```
  
